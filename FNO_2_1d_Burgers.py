@@ -1,14 +1,16 @@
+####done and dusted.###############
 ### This impelementation follows the second architecture given in fno a practical perspective'###############
-#############Needs normalization 80% done.########################
+
 import torch
 torch.cuda.empty_cache()
 import torch.nn as nn
+import gc
 import numpy as np
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import numpy as np
 torch.manual_seed(42)
-Nx, Ny, C = 8192, 16, 3
+Nx, Ny, trunc_modes = 8192, 16, 12
 Cin, Cout = 2, 1
 N1, N2=64, 64
 b=128
@@ -40,7 +42,7 @@ class FNO_Layer(nn.Module):
         
         x=x[:, :, start:end]
         x=torch.einsum('bcx,cdx->bdx', x, self.spec_wt_tensor)#[batch in_channel x][in_channel out_channel x]=[batch out_channel x]
-        out=torch.zeros(self.batch_size, self.N2, self.Nx, dtype=torch.cfloat, device=x.device)
+        out=torch.zeros(x.size(0), self.N2, self.Nx, dtype=torch.cfloat, device=x.device)
         out[:, :, start:end]=x
         
         x=torch.fft.ifftshift(out, dim=-1)
@@ -59,17 +61,15 @@ class FNO_1D(nn.Module):
         self.Sigmoid=nn.GELU()
         self.lift=nn.Conv1d(in_channels= Cin, out_channels= N1, kernel_size= 1)
         self.project=nn.Conv1d(in_channels= N2, out_channels= Cout, kernel_size= 1)
-        self.layers=nn.ModuleList([FNO_Layer(k_max=128, mesh_dim=1, N1=N1, N2=N2, Nx=Nx, batch_size=b) for _ in range(num_layers)])
+        self.layers=nn.ModuleList([FNO_Layer(k_max=trunc_modes, mesh_dim=1, N1=N1, N2=N2, Nx=Nx, batch_size=b) for _ in range(num_layers)])
 
     def forward(self, x):
         x=self.lift(x)
-        x=self.Sigmoid(x)
     
         for layer in self.layers:
             x=layer(x)
     
         x=self.project(x)
-        x=self.Sigmoid(x)
         return x
     
 
@@ -88,7 +88,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 model = FNO_1D().to(device)
-model.train()
 epochs=100
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.5)
@@ -102,27 +101,88 @@ inputs = torch.from_numpy(np.stack([data['a'], np.column_stack(( data['a_x'], np
 targets = torch.from_numpy(data['u']).float().unsqueeze(1)
 dataset = TensorDataset(inputs, targets)
 train_subset=Subset(dataset, range(512))
-loader = DataLoader(train_subset, batch_size=b, shuffle=True)
+val_subset=Subset(dataset, range(512, 1024))
+test_subset=Subset(dataset, range(1024, 2048))
+
+train_loader = DataLoader(train_subset, batch_size=b, shuffle=True)
+val_loader = DataLoader(val_subset, batch_size=b, shuffle=False)
+test_loader  = DataLoader(test_subset, batch_size=b, shuffle=False)
 losses=[]
+vals=[]
 
 try:
     for epoch in range(epochs):
-        for batch_x, batch_y in loader:
+        model.train()
+        mean_train_loss=0.0
+        for batch_x, batch_y in train_loader:
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             
             optimizer.zero_grad()
             prediction = model(batch_x)
             loss = criterion(prediction, batch_y)
+            mean_train_loss+=loss.item()
             loss.backward()
             optimizer.step()
-        #scheduler.step()
-        losses.append(loss.item())
+        scheduler.step()
+        mean_train_loss/=len(train_loader)
+        losses.append(mean_train_loss)
         if epoch % 10 == 0:
-            print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
-        for group in optimizer.param_groups:
-            group['lr']/=1.1
+            print(f"Epoch {epoch}, Training Loss: {mean_train_loss:.6f}")
+        #for group in optimizer.param_groups:
+        #    group['lr']/=1
+        
+        model.eval()
+        mean_val_loss=0.0
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                
+                prediction = model(batch_x)
+                loss = criterion(prediction, batch_y)
+                mean_val_loss+=loss.item()
+            mean_val_loss/=len(val_loader)
+            vals.append(mean_val_loss)
+            
+            if epoch % 10 == 0:
+                print(f"Epoch {epoch}, Validation Loss: {mean_val_loss:.6f}")
+    
+    print("training done")
+    model.eval()
+    del optimizer
+    del train_loader
+    gc.collect()
+    torch.cuda.empty_cache()
+    
+    print("testing...")
+
+    loss=0
+    print('here')
+    with torch.no_grad():
+        for batch_x, batch_y in test_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            ###forward: fno maps a(x) -> u_pred(x) across full spatial grid
+            prediction = model(batch_x)
+        
+            ###data loss: supervised operator learning against ground truth u
+            loss_data = criterion(prediction, batch_y)
+        
+            loss += loss_data.item()
+    loss/=len(test_loader)
+    
+    print(f"final test loss:{loss}")
+
+    import matplotlib.pyplot as plt
+    plt.plot(np.linspace(1, epochs, num=epochs), losses)
+    plt.plot(np.linspace(1, epochs, num=epochs), vals)
+    plt.figure()
+    x, y = next(iter(test_loader))
+    plt.plot(np.linspace(0, 2*np.pi, 8192), y[0].cpu().numpy().squeeze())
+    with torch.no_grad():
+        plt.plot(np.linspace(0, 2*np.pi, 8192), model(x.to(device))[0].cpu().numpy().squeeze())
+    
 except KeyboardInterrupt:
     print("Manual interruption detected. Cleaning up...")
+
 finally:
     # This block runs regardless of how the script ends
     if 'model' in locals():
@@ -130,9 +190,3 @@ finally:
     torch.cuda.empty_cache()
     torch.cuda.synchronize() # Wait for all kernels to finish
     print("GPU Memory Cleared.")
-
-import matplotlib.pyplot as plt
-plt.plot(np.linspace(1, epochs, num=epochs), losses)
-print(loss)
-print("training done")
-print("testing...")
