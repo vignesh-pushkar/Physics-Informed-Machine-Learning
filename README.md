@@ -43,20 +43,16 @@ This project explores how physical laws (expressed as PDEs) can be embedded into
 
 ```
 .
-├── fno.py                  # 3-D FNO for Conjugate Heat Transfer
-├── Pino.py                 # 3-D PINO for Conjugate Heat Transfer
+├── 3D_Fno.py                  # 3-D FNO for Conjugate Heat Transfer
+├── 3D_Pino.py                 # 3-D PINO for Conjugate Heat Transfer
 ├── kf.py                   # FNO/PINO for Kolmogorov flow (Navier–Stokes)
-├── pinn_data.py            # PINN-based dataset generator for CHT
+├── Pinn_Data_Generation_CHT.py            # PINN-based dataset generator for CHT
 ├── pinn_inverse.py         # PINN inverse problem (parameter identification)
 ├── validate_nvidia.py      # Validation against NVIDIA OpenFOAM reference
-├── validate_pde.py         # PDE validation utilities
-├── q3.py                   # VPINN interface problem experiments
-├── q4.py                   # Burger's FNO/PINO experiments
+├── Interface_Problem_VPINNs               # VPINN interface problem experiments
+├── Interface_Problem_PINO                   # PINO interface problem experiments  
+├── PINO_1d_Burgers_equation.py                   # Burger's FNO/PINO experiments
 ├── q5.py                   # Long temporal transient flow
-├── compare_fno_pino.py     # Side-by-side FNO vs PINO comparison
-├── generate_data.py        # Data generation utilities
-├── report.tex              # Full LaTeX report
-├── references.bib          # Bibliography
 ├── results/                # ← All output plots and checkpoints go here
 │   ├── pinn/               #    1D & 2D PINN results
 │   ├── fno/                #    FNO training curves & predictions
@@ -65,7 +61,7 @@ This project explores how physical laws (expressed as PDEs) can be embedded into
 │   ├── burgers/            #    Burger's FNO/PINO figures
 │   ├── kolmogorov/         #    Kolmogorov flow figures
 │   └── cht/                #    Conjugate heat transfer figures
-└── data/                   # Datasets (not tracked by git — see .gitignore)
+└── data/                   # Datasets 
 ```
 
 > **Tip:** Keep the `results/` sub-folders organised by experiment so plots are easy to find and reference in the README (see [Adding Results / Plots](#adding-results--plots)).
