@@ -264,7 +264,7 @@ Same backbone with physics residuals for continuity, fluid energy, and solid Lap
 
 | Training Curves | Physics Residuals | YZ-slice Prediction |
 |:---:|:---:|:---:|
-| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/pino_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
+| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/PINO physics residuals) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
 
 #### Validation vs. NVIDIA OpenFOAM (`validate_nvidia.py`)
 
