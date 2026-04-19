@@ -43,29 +43,16 @@ This project explores how physical laws (expressed as PDEs) can be embedded into
 
 ```
 .
-├── fno.py                  # 3-D FNO for Conjugate Heat Transfer
-├── Pino.py                 # 3-D PINO for Conjugate Heat Transfer
-├── kf.py                   # FNO/PINO for Kolmogorov flow (Navier–Stokes)
-├── pinn_data.py            # PINN-based dataset generator for CHT
-├── pinn_inverse.py         # PINN inverse problem (parameter identification)
-├── validate_nvidia.py      # Validation against NVIDIA OpenFOAM reference
-├── validate_pde.py         # PDE validation utilities
-├── q3.py                   # VPINN interface problem experiments
-├── q4.py                   # Burger's FNO/PINO experiments
-├── q5.py                   # Long temporal transient flow
-├── compare_fno_pino.py     # Side-by-side FNO vs PINO comparison
-├── generate_data.py        # Data generation utilities
-├── report.tex              # Full LaTeX report
-├── references.bib          # Bibliography
-├── results/                # ← All output plots and checkpoints go here
-│   ├── pinn/               #    1D & 2D PINN results
-│   ├── fno/                #    FNO training curves & predictions
-│   ├── pino/               #    PINO results
-│   ├── vpinn/              #    VPINN interface problem figures
-│   ├── burgers/            #    Burger's FNO/PINO figures
-│   ├── kolmogorov/         #    Kolmogorov flow figures
-│   └── cht/                #    Conjugate heat transfer figures
-└── data/                   # Datasets (not tracked by git — see .gitignore)
+├── 3D_Fno.py                    # 3-D FNO for conjugate heat transfer (CHT)
+├── 3D_Pino.py                   # 3-D PINO for CHT
+├── Pinn_Data_Generation_CHT.py  # PINN-based dataset generation for CHT
+├── validate_CHT.py              # CHT validation vs NVIDIA/OpenFOAM reference
+├── FNO_1_1d_Burgers.py          # 1-D Burgers baseline (FNO)
+├── FNO_2_1d_Burgers.py          # 1-D Burgers FNO experiments
+├── PINO_1d_Burgers_equation.py  # 1-D Burgers PINO experiments
+├── Interface_Problem_VPINNs     # Interface problem (VPINN)
+├── Interface_Problem_PINO       # Interface problem (PINO)
+└── README.md
 ```
 
 > **Tip:** Keep the `results/` sub-folders organised by experiment so plots are easy to find and reference in the README (see [Adding Results / Plots](#adding-results--plots)).
@@ -270,6 +257,23 @@ Validation vs. NVIDIA OpenFOAM reference
 
 > **Note:** Large velocity errors are primarily explained by a 2× viscosity mismatch ($\nu=0.01$ vs. $\nu=0.02$) between training and reference, not model failure.
 
+#### CHT Plots
+
+> Run the CHT commands in [Running the Code](#running-the-code) with `--out results/cht` to generate these files.
+
+| FNO Curves | FNO Prediction (YZ) |
+|---|---|
+| ![CHT FNO curves](results/cht/fno_curves.png) | ![CHT FNO prediction](results/cht/fno_prediction_yz.png) |
+
+| PINO Curves | PINO Prediction (YZ) |
+|---|---|
+| ![CHT PINO curves](results/cht/pino_curves.png) | ![CHT PINO prediction](results/cht/pino_prediction_yz.png) |
+
+![CHT PINO physics residuals](results/cht/pino_physics_residuals.png)
+![CHT validation errors](results/cht/validate_errors.png)
+![CHT validation fields](results/cht/validate_fields_yz.png)
+![CHT validation scatter](results/cht/validate_scatter.png)
+
 ---
 
 ## Results Summary
@@ -309,15 +313,15 @@ pip install numpy scipy matplotlib scikit-learn tqdm
 
 | Script | Description | Command |
 |---|---|---|
-| `pinn_data.py` | Generate CHT dataset via PINN | `python pinn_data.py` |
-| `fno.py` | Train 3-D FNO on CHT | `python fno.py` |
-| `Pino.py` | Train 3-D PINO on CHT | `python Pino.py` |
-| `kf.py` | Kolmogorov flow FNO/PINO | `python kf.py` |
-| `validate_nvidia.py` | Validate against NVIDIA reference | `python validate_nvidia.py` |
-| `pinn_inverse.py` | PINN inverse problem | `python pinn_inverse.py` |
-| `q3.py` | VPINN interface problem | `python q3.py` |
-| `q4.py` | 1-D Burger's FNO/PINO | `python q4.py` |
-| `compare_fno_pino.py` | Side-by-side model comparison | `python compare_fno_pino.py` |
+| `Pinn_Data_Generation_CHT.py` | Generate CHT training data | `python Pinn_Data_Generation_CHT.py` |
+| `3D_Fno.py` | Train 3-D FNO on CHT | `python 3D_Fno.py --out results/cht` |
+| `3D_Pino.py` | Train 3-D PINO on CHT | `python 3D_Pino.py --out results/cht` |
+| `validate_CHT.py` | Validate against reference and save CHT plots | `python validate_CHT.py --out results/cht` |
+| `FNO_1_1d_Burgers.py` | 1-D Burgers FNO baseline | `python FNO_1_1d_Burgers.py` |
+| `FNO_2_1d_Burgers.py` | 1-D Burgers FNO experiments | `python FNO_2_1d_Burgers.py` |
+| `PINO_1d_Burgers_equation.py` | 1-D Burgers PINO | `python PINO_1d_Burgers_equation.py` |
+| `Interface_Problem_VPINNs` | Interface problem (VPINN) | `python Interface_Problem_VPINNs` |
+| `Interface_Problem_PINO` | Interface problem (PINO) | `python Interface_Problem_PINO` |
 
 ---
 
@@ -352,6 +356,14 @@ results/
 ├── burgers/           # symlinked / copied from fno/ and pino/
 ├── kolmogorov/
 └── cht/
+    ├── fno_curves.png
+    ├── fno_prediction_yz.png
+    ├── pino_curves.png
+    ├── pino_prediction_yz.png
+    ├── pino_physics_residuals.png
+    ├── validate_errors.png
+    ├── validate_fields_yz.png
+    └── validate_scatter.png
 ```
 
 ### How to save plots from your scripts
