@@ -55,7 +55,7 @@ This project explores how physical laws (expressed as PDEs) can be embedded into
 ├── q5.py                          # Long temporal transient flow
 ├── results/                       # Output plots (organised by experiment)
 │   ├── pinn/
-│   ├── vpinn/
+│   ├── Interface_Problem/
 │   ├── burgers/
 │   ├── kolmogorov/
 │   └── cht/
