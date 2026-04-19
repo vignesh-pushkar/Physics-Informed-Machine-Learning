@@ -20,7 +20,6 @@
 - [Results Summary](#results-summary)
 - [Setup & Installation](#setup--installation)
 - [Running the Code](#running-the-code)
-- [Adding Results / Plots](#adding-results--plots)
 - [References](#references)
 
 ---
@@ -43,28 +42,24 @@ This project explores how physical laws (expressed as PDEs) can be embedded into
 
 ```
 .
-├── 3D_Fno.py                  # 3-D FNO for Conjugate Heat Transfer
-├── 3D_Pino.py                 # 3-D PINO for Conjugate Heat Transfer
-├── kf.py                   # FNO/PINO for Kolmogorov flow (Navier–Stokes)
-├── Pinn_Data_Generation_CHT.py            # PINN-based dataset generator for CHT
-├── pinn_inverse.py         # PINN inverse problem (parameter identification)
-├── validate_nvidia.py      # Validation against NVIDIA OpenFOAM reference
-├── Interface_Problem_VPINNs               # VPINN interface problem experiments
-├── Interface_Problem_PINO                   # PINO interface problem experiments  
-├── PINO_1d_Burgers_equation.py                   # Burger's FNO/PINO experiments
-├── q5.py                   # Long temporal transient flow
-├── results/                # ← All output plots and checkpoints go here
-│   ├── pinn/               #    1D & 2D PINN results
-│   ├── fno/                #    FNO training curves & predictions
-│   ├── pino/               #    PINO results
-│   ├── vpinn/              #    VPINN interface problem figures
-│   ├── burgers/            #    Burger's FNO/PINO figures
-│   ├── kolmogorov/         #    Kolmogorov flow figures
-│   └── cht/                #    Conjugate heat transfer figures
-└── data/                   # Datasets 
+├── 3D_Fno.py                      # 3-D FNO for Conjugate Heat Transfer
+├── 3D_Pino.py                     # 3-D PINO for Conjugate Heat Transfer
+├── kf.py                          # FNO/PINO for Kolmogorov flow (Navier–Stokes)
+├── Pinn_Data_Generation_CHT.py    # PINN-based dataset generator for CHT
+├── pinn_inverse.py                # PINN inverse problem (parameter identification)
+├── validate_nvidia.py             # Validation against NVIDIA OpenFOAM reference
+├── Interface_Problem_VPINNs       # VPINN interface problem experiments
+├── Interface_Problem_PINO         # PINO interface problem experiments
+├── PINO_1d_Burgers_equation.py    # 1-D Burger's FNO/PINO experiments
+├── q5.py                          # Long temporal transient flow
+├── results/                       # Output plots (organised by experiment)
+│   ├── pinn/
+│   ├── vpinn/
+│   ├── burgers/
+│   ├── kolmogorov/
+│   └── cht/
+└── data/                          # Datasets (not tracked by git)
 ```
-
-> **Tip:** Keep the `results/` sub-folders organised by experiment so plots are easy to find and reference in the README (see [Adding Results / Plots](#adding-results--plots)).
 
 ---
 
@@ -76,7 +71,7 @@ Physics-Informed Neural Networks approximate PDE solutions by minimising a combi
 
 $$\mathcal{L} = \mathcal{L}_{\text{PDE}} + \mathcal{L}_{\text{BC}}$$
 
-**1D Poisson — Results**
+**1D Poisson**
 
 | Metric | Value |
 |---|---|
@@ -84,10 +79,10 @@ $$\mathcal{L} = \mathcal{L}_{\text{PDE}} + \mathcal{L}_{\text{BC}}$$
 | Agreement | Exact ≈ Predicted |
 
 | Exact Solution | Predicted Solution |
-|---|---|
+|:---:|:---:|
 | ![1D PINN Exact](results/pinn/pinn_1d_exact.png) | ![1D PINN Predicted](results/pinn/pinn_1d_prediction.png) |
 
-**2D Poisson — Results**
+**2D Poisson**
 
 | Metric | Value |
 |---|---|
@@ -97,13 +92,11 @@ $$\mathcal{L} = \mathcal{L}_{\text{PDE}} + \mathcal{L}_{\text{BC}}$$
 
 **Learnable Loss Balancing**
 
-A learnable parameter $k = \exp(\alpha)$ weights the boundary loss:
-$$\mathcal{L} = \mathcal{L}_{\text{PDE}} + k \cdot \mathcal{L}_{\text{BC}}$$
+A learnable parameter $k = \exp(\alpha)$ weights the boundary loss: $\mathcal{L} = \mathcal{L}_{\text{PDE}} + k \cdot \mathcal{L}_{\text{BC}}$
 
-| Metric | Value |
+| Final $k$ | $L_2$ error |
 |---|---|
-| Final $k$ | 0.685833 |
-| $L_2$ error | $4.75 \times 10^{-2}$ |
+| 0.685833 | $4.75 \times 10^{-2}$ |
 
 ![PINN with learnable k](results/pinn/pinn_k_exact.png)
 
@@ -115,7 +108,7 @@ Each FNO layer applies:
 
 $$v(x) = \sigma\!\left(\mathcal{F}^{-1}\!\left(R(k)\,\mathcal{F}(u)(k)\right) + W\,u(x)\right)$$
 
-Only $|k| \le K$ low-frequency modes are retained, giving $\mathcal{O}(N \log N)$ complexity per layer. The model is **resolution-invariant**: trained at one grid resolution, it generalises to finer/coarser meshes.
+Only $|k| \le K$ low-frequency modes are retained, giving $\mathcal{O}(N \log N)$ complexity per layer. The model is **resolution-invariant**: trained at one grid resolution, it generalises to finer or coarser meshes without retraining.
 
 ---
 
@@ -131,7 +124,7 @@ This reduces label requirements, improves generalisation in sparse-data regimes,
 
 ### 4. Inverse Problem: Parameter Identification
 
-**2D Poisson inverse problem** — identify unknown coefficients $k_1, k_2$ in:
+**2D Poisson inverse problem** — identify unknown diffusivity coefficients $k_1, k_2$ in:
 
 $$k_1\,u_{xx} + k_2\,u_{yy} = f(x,y)$$
 
@@ -140,25 +133,27 @@ $$k_1\,u_{xx} + k_2\,u_{yy} = f(x,y)$$
 | **PINN** | 0.9693 | 1.0747 |
 | **PINO** | 0.6465 | 0.6176 |
 
-PINN recovers parameters accurately via automatic differentiation. PINO suffers from finite-difference approximation errors.
+PINN recovers parameters accurately via automatic differentiation. PINO's finite-difference derivative approximation introduces errors that degrade parameter estimation.
 
 | PINN Loss | $k_1$ Error | $k_2$ Error |
-|---|---|---|
+|:---:|:---:|:---:|
 | ![PINN inv loss](results/pinn/pinn_inv_loss.png) | ![k1 error](results/pinn/pinn_k1_error.png) | ![k2 error](results/pinn/pinn_k2_error.png) |
 
 | PINO Loss | PINO $k_1$ | PINO $k_2$ |
-|---|---|---|
+|:---:|:---:|:---:|
 | ![PINO loss](results/pino/pino_loss.png) | ![PINO w](results/pino/w.png) | ![PINO download](results/pino/download.png) |
 
 ---
 
 ### 5. Interface Problem via VPINN
 
-**Problem:** 2D Poisson on $(0,1)^2$ with interface at $x = 0.5$, where $\partial_x u$ is discontinuous.
+**Problem:** 2D Poisson on $(0,1)^2$ with interface at $x = 0.5$ where $\partial_x u$ is discontinuous.
 
-**VPINN test spaces used:**
+**Test spaces:**
 - Trigonometric: $v_{mn} = \sin(m\pi x)\sin(n\pi y)$
 - Bubble-Legendre: $v_{mn} = x(1-x)y(1-y)\,P_m(2x-1)\,P_n(2y-1)$
+
+**VPINN results:**
 
 | Variant | MSE | Relative $L^2$ |
 |---|---|---|
@@ -166,7 +161,7 @@ PINN recovers parameters accurately via automatic differentiation. PINO suffers 
 | Quadrature | $1.56 \times 10^{-5}$ | 3.54% |
 | Quadrature + RBF | $1.50 \times 10^{-5}$ | **3.47%** |
 
-**PINO on the same problem** (64×64 grid, 4 Fourier layers, width 48):
+**PINO results** (64×64 grid, 4 Fourier layers, width 48):
 
 | Metric | Family test set | Tutorial case |
 |---|---|---|
@@ -185,17 +180,16 @@ PINN recovers parameters accurately via automatic differentiation. PINO suffers 
 
 $$\frac{\partial u}{\partial t} + u\frac{\partial u}{\partial x} = \nu\frac{\partial^2 u}{\partial x^2}, \quad x \in [0,2\pi],\; t \in [0,1]$$
 
-Operator learning from $u(x,0) \mapsto u(x,1)$ on a grid of resolution **8192**.
+Operator learning: $u(x,0) \mapsto u(x,1)$ on a grid of resolution **8192**.
 
 | | FNO | PINO |
 |---|---|---|
 | Fourier modes | 2048 | 12 |
 | Regularisation | Data only | Data + PDE |
-| Training samples | 512 | 512 |
-| Test samples | 1024 | 1024 |
+| Training / Test samples | 512 / 1024 | 512 / 1024 |
 
-| FNO: Loss & Prediction | | PINO: Loss & Prediction | |
-|---|---|---|---|
+| FNO — Loss & Prediction | | PINO — Loss & Prediction | |
+|:---:|:---:|:---:|:---:|
 | ![Burgers FNO 1](results/burgers/1d_Burgers_FNO1.png) | ![Burgers FNO 2](results/burgers/1d_Burgers_fno2.png) | ![Burgers PINO 1](results/burgers/burger_pino1.png) | ![Burgers PINO 2](results/burgers/burger_pino2.png) |
 
 ---
@@ -206,15 +200,13 @@ Operator learning from $u(x,0) \mapsto u(x,1)$ on a grid of resolution **8192**.
 
 $$\partial_t \omega + \mathbf{u}\cdot\nabla\omega = \nu\,\Delta\omega + f(x)$$
 
-**Subtasks:**
-
 | Subtask | Details |
 |---|---|
 | Chaotic Kolmogorov flow | $Re=500$, $t \in [t_0, t_0+1]$, $l=2\pi$, modes $k_{\max}=12$ |
-| Transfer learning ($Re$) | Pre-trained at $Re=100$, fine-tuned to $Re=40$ and $Re=500$ |
+| Transfer learning across $Re$ | Pre-trained at $Re=100$, fine-tuned to $Re=40$ and $Re=500$ |
 | Long temporal flow | $T=50$, steps $\{0,5,\dots,50\}$, $64\times64$ grid |
 
-**Transfer learning loss:**
+Transfer learning combines a physics loss at the target viscosity with an anchor loss that prevents the model drifting far from its pre-trained weights:
 
 $$\mathcal{L}_{\text{total}} = \beta\,\mathcal{L}_{\text{phys}}(\nu_{\text{target}}) + \alpha\,\mathcal{L}_{\text{anchor}}$$
 
@@ -222,21 +214,23 @@ $$\mathcal{L}_{\text{total}} = \beta\,\mathcal{L}_{\text{phys}}(\nu_{\text{targe
 
 ### 8. Conjugate Heat Transfer (3-D)
 
-3-D steady-state conjugate heat transfer over a **parametric finned heat sink** with 6 design parameters.
+3-D steady-state conjugate heat transfer over a **parametric finned heat sink** with 6 design parameters (fin height, fin length, fin thickness, temperature gradient, inlet velocity, solid conductivity).
 
 **Pipeline:**
 
 ```
-PINN dataset generation (125 samples)
+Pinn_Data_Generation_CHT.py  →  125-sample PINN dataset
         ↓
-3-D FNO / PINO training (50×20×20 grid)
+3D_Fno.py / 3D_Pino.py  →  3-D operator training  (50 × 20 × 20 grid)
         ↓
-Validation vs. NVIDIA OpenFOAM reference
+validate_nvidia.py  →  Validation vs. NVIDIA OpenFOAM reference
 ```
 
-**FNO test errors (masked relative $\ell_2$, %):**
+#### FNO (`3D_Fno.py`)
 
-| Field | Mean | Std |
+Architecture: 4 spectral layers · width 48 · modes $(K_x, K_y, K_z) = (12, 6, 6)$ · Instance Norm + Dropout3d ($p=0.10$)
+
+| Field | Mean Rel-$\ell_2$ (%) | Std (%) |
 |---|---|---|
 | $u$ | 34.19 | 8.19 |
 | $v$ | 45.61 | 13.61 |
@@ -245,9 +239,15 @@ Validation vs. NVIDIA OpenFOAM reference
 | $\theta_f$ | 44.09 | 20.91 |
 | $\theta_s$ | 57.20 | 27.91 |
 
-**PINO test errors:**
+| Training Curves | YZ-slice Prediction |
+|:---:|:---:|
+| ![FNO training curves](results/cht/fno_curves.png) | ![FNO YZ-slice prediction](results/cht/fno_prediction_yz.png) |
 
-| Field | Mean | Std |
+#### PINO (`3D_Pino.py`)
+
+Same backbone with physics residuals for continuity, fluid energy, and solid Laplace enforced via finite differences. Physics weight $\lambda$ ramps from 0 → 0.05 over epochs 60–180.
+
+| Field | Mean Rel-$\ell_2$ (%) | Std (%) |
 |---|---|---|
 | $u$ | 36.69 | 9.36 |
 | $v$ | 47.34 | 14.78 |
@@ -256,15 +256,34 @@ Validation vs. NVIDIA OpenFOAM reference
 | $\theta_f$ | 55.93 | 28.96 |
 | $\theta_s$ | **41.49** | 17.33 |
 
-**Validation vs. NVIDIA OpenFOAM (Rel-$\ell_2$ % / MAE):**
+| PDE Residual | Mean MSE |
+|---|---|
+| Continuity | $2.75 \times 10^{-2}$ |
+| Fluid energy | $1.60 \times 10^{-4}$ |
+| Solid Laplace | $4.92 \times 10^{0}$ |
+
+| Training Curves | Physics Residuals | YZ-slice Prediction |
+|:---:|:---:|:---:|
+| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/pino_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
+
+#### Validation vs. NVIDIA OpenFOAM (`validate_nvidia.py`)
+
+> All three models were trained at $\nu=0.01$; the NVIDIA reference uses $\nu=0.02$. The 2× viscosity mismatch is the primary driver of velocity errors — not model failure. Temperature predictions are the more meaningful comparison.
 
 | Field | PINN | FNO | PINO |
 |---|---|---|---|
-| $u$ | 44.90 / 0.397 | 46.20 / 0.397 | **42.17** / 0.374 |
-| $\theta_f$ | 36.17 / 0.027 | **35.25** / 0.026 | 34.69 / 0.027 |
-| $\theta_s$ | 51.09 / 0.061 | **33.59** / 0.039 | 42.44 / 0.053 |
+| $u$ | 44.90% / 0.397 | 46.20% / 0.397 | **42.17%** / 0.374 |
+| $v$ | 82.24% / 0.078 | 76.54% / 0.069 | 78.92% / 0.072 |
+| $w$ | 103.25% / 0.052 | 95.94% / 0.043 | 95.92% / 0.044 |
+| $p$ | 92.64% / 2.924 | 92.94% / 2.960 | 92.98% / 2.945 |
+| $\theta_f$ | 36.17% / 0.027 | **35.25%** / 0.026 | 34.69% / 0.027 |
+| $\theta_s$ | 51.09% / 0.061 | **33.59%** / 0.039 | 42.44% / 0.053 |
 
-> **Note:** Large velocity errors are primarily explained by a 2× viscosity mismatch ($\nu=0.01$ vs. $\nu=0.02$) between training and reference, not model failure.
+*Columns: Rel-L₂ (%) / MAE*
+
+| Per-field Error Bars | YZ-slice Comparison | Predicted vs Reference |
+|:---:|:---:|:---:|
+| ![Validation errors](results/cht/validate_errors.png) | ![Validation YZ fields](results/cht/validate_fields_yz.png) | ![Validation scatter](results/cht/validate_scatter.png) |
 
 ---
 
@@ -272,32 +291,29 @@ Validation vs. NVIDIA OpenFOAM reference
 
 | Experiment | Best Method | Key Metric |
 |---|---|---|
-| 1-D Poisson PINN | PINN | Loss $2\times10^{-6}$ |
-| 2-D Poisson PINN (learnable k) | PINN + learnable k | $L_2 = 4.75\times10^{-2}$ |
-| Inverse problem | PINN | $k_1=0.97,\; k_2=1.07$ |
-| Interface problem | PINO | $L_2 = 2.43\%$ |
-| CHT solid temperature | FNO | Rel-$\ell_2 = 33.6\%$ (vs NVIDIA) |
-| CHT fluid temperature | PINO (internal) | Rel-$\ell_2 = 55.93\%$ |
+| 1-D Poisson PINN | PINN | Loss 2×10⁻⁶ |
+| 2-D Poisson PINN (learnable k) | PINN + learnable k | L₂ = 4.75×10⁻² |
+| Inverse problem | PINN | k₁ = 0.97, k₂ = 1.07 |
+| Interface problem | PINO | L₂ = 2.43% |
+| CHT solid temperature | FNO | Rel-L₂ = 33.6% (vs NVIDIA) |
+| CHT fluid temperature | PINO (internal) | Rel-L₂ = 41.5% |
 
 ---
 
 ## Setup & Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/<your-username>/<repo-name>.git
 cd <repo-name>
 
-# Create and activate a conda environment
 conda create -n piml python=3.10 -y
 conda activate piml
 
-# Install dependencies
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install numpy scipy matplotlib scikit-learn tqdm
 ```
 
-> **GPU:** All experiments were developed on a single NVIDIA T4 (Kaggle). A CUDA-enabled GPU is strongly recommended.
+> All experiments were run on a single NVIDIA T4 GPU (Kaggle). A CUDA-enabled GPU is strongly recommended.
 
 ---
 
@@ -305,91 +321,24 @@ pip install numpy scipy matplotlib scikit-learn tqdm
 
 | Script | Description | Command |
 |---|---|---|
-| `pinn_data.py` | Generate CHT dataset via PINN | `python pinn_data.py` |
-| `fno.py` | Train 3-D FNO on CHT | `python fno.py` |
-| `Pino.py` | Train 3-D PINO on CHT | `python Pino.py` |
+| `Pinn_Data_Generation_CHT.py` | Generate CHT dataset via PINN | `python Pinn_Data_Generation_CHT.py --out results/cht` |
+| `3D_Fno.py` | Train 3-D FNO on CHT | `python 3D_Fno.py --out results/cht` |
+| `3D_Pino.py` | Train 3-D PINO on CHT | `python 3D_Pino.py --out results/cht` |
+| `validate_nvidia.py` | Validate against NVIDIA reference | `python validate_nvidia.py --out results/cht` |
 | `kf.py` | Kolmogorov flow FNO/PINO | `python kf.py` |
-| `validate_nvidia.py` | Validate against NVIDIA reference | `python validate_nvidia.py` |
 | `pinn_inverse.py` | PINN inverse problem | `python pinn_inverse.py` |
-| `q3.py` | VPINN interface problem | `python q3.py` |
-| `q4.py` | 1-D Burger's FNO/PINO | `python q4.py` |
-| `compare_fno_pino.py` | Side-by-side model comparison | `python compare_fno_pino.py` |
-
----
-
-## Adding Results / Plots
-
-### Recommended folder structure inside `results/`
-
-```
-results/
-├── pinn/
-│   ├── pinn_1d_exact.png
-│   ├── pinn_1d_prediction.png
-│   ├── pinn_2d_exact.png
-│   ├── pinn_2d_error.png
-│   ├── pinn_k_exact.png
-│   ├── pinn_inv_loss.png
-│   ├── pinn_k1_error.png
-│   └── pinn_k2_error.png
-├── fno/
-│   ├── 1d_Burgers_FNO1.png
-│   └── 1d_Burgers_fno2.png
-├── pino/
-│   ├── pino_loss.png
-│   ├── w.png
-│   ├── download.png
-│   ├── burger_pino1.png
-│   └── burger_pino2.png
-├── vpinn/
-│   ├── vpinn_results_1.jpeg
-│   ├── vpinn_results_2.jpeg
-│   └── vpinn_results_3.jpeg
-├── burgers/           # symlinked / copied from fno/ and pino/
-├── kolmogorov/
-└── cht/
-```
-
-### How to save plots from your scripts
-
-At the end of any `matplotlib` plotting block, save to the appropriate sub-folder:
-
-```python
-import os, matplotlib.pyplot as plt
-
-os.makedirs("results/pinn", exist_ok=True)
-plt.savefig("results/pinn/pinn_1d_exact.png", dpi=150, bbox_inches="tight")
-plt.close()
-```
-
-### Should you include plots in the README?
-
-**Yes** — GitHub renders images inline if you use a relative path like:
-
-```markdown
-![Alt text](results/pinn/pinn_1d_exact.png)
-```
-
-**Best practices:**
-- Keep image files **under ~500 KB** each (use PNG for line plots, JPEG for heatmaps).
-- Use descriptive alt-text so the README is accessible.
-- For large figures (e.g., multi-panel), consider linking to the file instead of embedding:
-  ```markdown
-  [View full CHT results](results/cht/cht_summary.png)
-  ```
-- Add a `.gitignore` rule for large checkpoint files so only plots are tracked:
-  ```gitignore
-  # Ignore model checkpoints but keep result images
-  results/**/*.pth
-  results/**/*.pt
-  data/
-  ```
+| `Interface_Problem_VPINNs` | VPINN interface problem | `python Interface_Problem_VPINNs` |
+| `Interface_Problem_PINO` | PINO interface problem | `python Interface_Problem_PINO` |
+| `PINO_1d_Burgers_equation.py` | 1-D Burger's FNO/PINO | `python PINO_1d_Burgers_equation.py` |
+| `q5.py` | Long temporal transient flow | `python q5.py` |
 
 ---
 
 ## References
 
 1. Li, Z. et al. *Fourier Neural Operator for Parametric Partial Differential Equations.* ICLR 2021.
-2. Raissi, M., Perdikaris, P. & Karniadakis, G. E. *Physics-informed neural networks.* JCP 2019.
+2. Raissi, M., Perdikaris, P. & Karniadakis, G. E. *Physics-informed neural networks.* Journal of Computational Physics, 2019.
 3. Li, Z. et al. *Physics-Informed Neural Operator for Learning Partial Differential Equations.* ACM / JML 2021.
 4. NVIDIA PhysicsNeMo Conjugate Heat Transfer Reference Dataset.
+5. Cao, S. *Choose a Transformer: Fourier or Galerkin.* NeurIPS 2021.
+
