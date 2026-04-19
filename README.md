@@ -265,7 +265,7 @@ Same backbone with physics residuals for continuity, fluid energy, and solid Lap
 
 | Training Curves | Physics Residuals | YZ-slice Prediction |
 |:---:|:---:|:---:|
-| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/pino_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
+| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/PINO_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
 
 #### Validation vs. NVIDIA OpenFOAM (`validate_nvidia.py`)
 
@@ -307,7 +307,7 @@ Datasets are hosted on Kaggle — **do not commit them to the repository**.
 
 | Experiment | Dataset | Link |
 |---|---|---|
-| Conjugate Heat Transfer (training) | `dataset_combined.npz` — 125 PINN-generated samples on a 50×20×20 grid | [subhommahalik/dataset-combined-npz](https://www.kaggle.com/datasets/subhommahalik/dataset-combined-npz) |
+| Conjugate Heat Transfer (training) | `dataset_combined.npz` — 100 PINN-generated samples on a 50×20×20 grid | [subhommahalik/dataset-combined-npz](https://www.kaggle.com/datasets/subhommahalik/dataset-combined-npz) |
 | CHT — FNO checkpoint | `best_fno.pt` — best validation checkpoint | [pravega/best-fno-pt](https://www.kaggle.com/datasets/pravega/best-fno-pt) |
 | CHT — PINO checkpoint | `best_pino.pt` — best validation checkpoint | [pravega/best-pino-pt](https://www.kaggle.com/datasets/pravega/best-pino-pt) |
 | Kolmogorov Flow (Re=500) | `KFvorticity_Re500_N1000_T500.npy` — 1000 trajectories, 500 timesteps, 64×64 | [subhommahalik/kfvorticity-re500-n1000-t500-npy](https://www.kaggle.com/datasets/subhommahalik/kfvorticity-re500-n1000-t500-npy) |
