@@ -18,6 +18,7 @@
   - [7. Navier–Stokes / Kolmogorov Flow](#7-navierstokes--kolmogorov-flow)
   - [8. Conjugate Heat Transfer (3-D)](#8-conjugate-heat-transfer-3-d)
 - [Results Summary](#results-summary)
+- [Data](#data)
 - [Setup & Installation](#setup--installation)
 - [Running the Code](#running-the-code)
 - [References](#references)
@@ -264,7 +265,7 @@ Same backbone with physics residuals for continuity, fluid energy, and solid Lap
 
 | Training Curves | Physics Residuals | YZ-slice Prediction |
 |:---:|:---:|:---:|
-| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/PINO_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
+| ![PINO training curves](results/cht/pino_curves.png) | ![PINO physics residuals](results/cht/pino_physics_residuals.png) | ![PINO YZ-slice prediction](results/cht/pino_prediction_yz.png) |
 
 #### Validation vs. NVIDIA OpenFOAM (`validate_nvidia.py`)
 
@@ -297,6 +298,22 @@ Same backbone with physics residuals for continuity, fluid energy, and solid Lap
 | Interface problem | PINO | L₂ = 2.43% |
 | CHT solid temperature | FNO | Rel-L₂ = 33.6% (vs NVIDIA) |
 | CHT fluid temperature | PINO (internal) | Rel-L₂ = 41.5% |
+
+---
+
+## Data
+
+Datasets are hosted on Kaggle — **do not commit them to the repository**.
+
+| Experiment | Dataset | Link |
+|---|---|---|
+| Conjugate Heat Transfer (training) | `dataset_combined.npz` — 125 PINN-generated samples on a 50×20×20 grid | [subhommahalik/dataset-combined-npz](https://www.kaggle.com/datasets/subhommahalik/dataset-combined-npz) |
+| CHT — FNO checkpoint | `best_fno.pt` — best validation checkpoint | [pravega/best-fno-pt](https://www.kaggle.com/datasets/pravega/best-fno-pt) |
+| CHT — PINO checkpoint | `best_pino.pt` — best validation checkpoint | [pravega/best-pino-pt](https://www.kaggle.com/datasets/pravega/best-pino-pt) |
+| Kolmogorov Flow (Re=500) | `KFvorticity_Re500_N1000_T500.npy` — 1000 trajectories, 500 timesteps, 64×64 | [subhommahalik/kfvorticity-re500-n1000-t500-npy](https://www.kaggle.com/datasets/subhommahalik/kfvorticity-re500-n1000-t500-npy) |
+| NVIDIA OpenFOAM CHT reference | `threeFin_extend_fluid0.csv` / `threeFin_extend_solid0.csv` — high-fidelity laminar reference | [pravega/threefin-extend-fluid0-csv](https://www.kaggle.com/datasets/pravega/threefin-extend-fluid0-csv) · [subhommahalik/threefin-extend-solid0](https://www.kaggle.com/datasets/subhommahalik/threefin-extend-solid0) |
+
+> **1-D Burger's equation**, **Poisson (1D/2D)**, and **interface problem** datasets are generated analytically at runtime — no download required.
 
 ---
 
@@ -341,4 +358,3 @@ pip install numpy scipy matplotlib scikit-learn tqdm
 3. Li, Z. et al. *Physics-Informed Neural Operator for Learning Partial Differential Equations.* ACM / JML 2021.
 4. NVIDIA PhysicsNeMo Conjugate Heat Transfer Reference Dataset.
 5. Cao, S. *Choose a Transformer: Fourier or Galerkin.* NeurIPS 2021.
-
